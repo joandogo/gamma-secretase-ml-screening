@@ -40,6 +40,50 @@ For more details, see the CESGA user guide:
 ```bash
 pip install -r requirements.txt
 ```
+## 📊 Dataset Information
+
+- **Source:** ChEMBL (CHEMBL2094135)  
+- **File:** `data/Gama_secret_pub.csv`  
+- **Entries:** 1,745 compounds  
+- **Activity labels:**  
+  - **Actives** (IC₅₀ < 10 nM): 1,367  
+  - **Inactives:** 378  
+- **Preprocessing:**  
+  - SMILES standardization & deduplication performed prior to descriptor calculation  
+- **Descriptor calculation:**  
+  - ~200 physicochemical & topological descriptors computed with **AlvaMolecule v2.0.10**
+## 💻 Code Information
+
+- **`data/`**:  
+  - Raw (`raw/`) and processed (`processed/`) CSVs  
+- **`scripts/`**:  
+  - `train_ann.py` – Multi-Layer Perceptron (MLP) training  
+  - `train_rf.py` – Random Forest training  
+  - `train_svm.py` – Support Vector Machine training  
+  - `train_gp.py` – Gaussian Process Classifier  
+  - `train_knn_nca.py` – KNN with Neighborhood Component Analysis  
+  - `train_lr.py` – Logistic Regression  
+- **`evaluation/`**:  
+  - `eval_mods.py` – 10-fold cross-validation and metric aggregation  
+  - `plot_stats.py` – Statistical tests (ANOVA, Tukey HSD) and plotting  
+
+## ⚙️ Methodology
+
+1. **Data curation**  
+   - Clean and standardize SMILES; remove duplicates  
+2. **Descriptor calculation**  
+   - Compute ~200 physicochemical and topological descriptors with AlvaMolecule v2.0.10  
+3. **Preprocessing**  
+   - Normalize features (StandardScaler)  
+   - Reduce dimensionality via PCA (retain 30 components)  
+4. **Model training**  
+   - Six algorithms (MLP, RF, SVM, GP, KNN+NCA, LR)  
+   - Hyperparameter optimization with Optuna TPE (100–300 trials per model)  
+   - Validation: 10-fold cross-validation, F1-macro as primary metric  
+5. **Statistical analysis**  
+   - Normality test: Shapiro–Wilk  
+   - Homoscedasticity: Bartlett’s test  
+   - ANOVA + Tukey HSD for pairwise model comparisons
 
 ## 🚀 How to Run
 
