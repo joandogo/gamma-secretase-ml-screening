@@ -19,6 +19,22 @@ gamma-secretase-ml-screening/
 └── LICENSE                # Project license (MIT)
 ```
 
+## 💻 Infrastructure
+
+All model training and evaluation were conducted on **FinisTerrae III**, the flagship supercomputer at CESGA, which provides both high-performance CPU and GPU resources interconnected by a low-latency network.  
+
+<img width="2171" height="1440" alt="FT3_schema" src="https://github.com/user-attachments/assets/7bea0591-faf8-4736-80e3-e8a7051867b4" />
+
+- **Node used for benchmarking (“ilk”):**  
+  - 256 compute nodes  
+  - 2× Intel Xeon Ice Lake 8352Y (32 cores each → 64 cores/node) → 16,384 cores total  
+  - 256 GB RAM (247 GB usable)  
+  - 960 GB SSD NVMe local storage  
+  - Infiniband HDR 100 network connection  
+
+For more details, see the CESGA user guide:  
+<https://cesga-docs.gitlab.io/ft3-user-guide/overview.html>
+
 ## ⚙️ Requirements
 
 ```bash
