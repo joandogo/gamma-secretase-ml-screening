@@ -1,101 +1,118 @@
 # Virtual Screening of Gamma-Secretase Inhibitors using Machine Learning
 
-This repository contains the code and data used for virtual screening of compounds targeting **gamma-secretase**, an enzyme associated with the pathogenesis of Alzheimer’s disease.
+This repository contains code, data documentation, and cleaned analysis outputs for machine-learning classification of gamma-secretase inhibitors associated with Alzheimer's disease research.
 
-Several machine learning models were trained and optimized using **Optuna** to classify active compounds based on physicochemical descriptors. The results were part of the research article:
+The project evaluates multiple supervised classifiers for active/inactive compound classification across IC50 activity thresholds. The cleaned workflow in `Mol_con_result` updates the original analysis by enforcing outer-fold-only performance reporting from nested cross-validation and by replacing the older ANOVA/Tukey interpretation with paired non-parametric model comparisons.
 
-> **"Evaluating Machine Learning Algorithms for Classifying Active Compounds in Alzheimer’s Disease" (2025)**
+## Current Clean Workflow
 
-## 🧠 Project Structure
+The current cleaned procedure is documented in:
+
+- `docs/clean_nested_cv_workflow.md`
+- `results/clean_analysis/executive_summary.md`
+- `results/clean_analysis/canonical_selection_log.md`
+- `results/clean_analysis/leakage_audit.md`
+- `results/clean_analysis/final_statistical_comparison_report.md`
+- `results/clean_analysis/fixed_hparam_stability_report.md`
+- `results/clean_analysis/global_ranking_complete_only.csv`
+
+Core methodological rules:
+
+1. Report performance only from held-out outer folds of nested cross-validation.
+2. Select canonical runs without using performance metrics.
+3. Exclude duplicate and non-canonical runs from the main analysis.
+4. Use final full-data `.joblib` pipelines only for later screening or exploratory interpretation, not for performance estimation.
+5. Compare classifiers with Friedman tests over paired outer folds, followed by Wilcoxon signed-rank tests with Holm correction when appropriate.
+6. Treat fixed-hyperparameter repeated-CV results as supplementary stability evidence, not external validation.
+
+## Models
+
+The analysis covers the following classifiers:
+
+- Logistic regression (`logreg`)
+- Neighborhood Components Analysis + KNN (`nca_knn`)
+- Support Vector Machine (`svm`)
+- Random Forest (`rf`)
+- Gaussian Process Classifier (`gpc`)
+- Multi-Layer Perceptron (`mlp`)
+- XGBoost (`xgboost`)
+
+## Thresholds
+
+The cleaned analysis uses three IC50 thresholds:
+
+- 500 nM
+- 1000 nM
+- 2000 nM
+
+## Clean Analysis Summary
+
+The cleaned nested-CV analysis reports:
+
+- Performance source: outer-fold nested-CV metrics only
+- Final pipelines used for performance: false
+- Duplicate runs excluded: 15
+- Top global complete model by descriptive ranking: random forest
+
+Across complete canonical runs and primary metrics, the descriptive global ranking was:
+
+| Rank | Model | Mean macro-F1 | Mean PR-AUC | Mean ROC-AUC |
+|---:|---|---:|---:|---:|
+| 1 | rf | 0.7357 | 0.9290 | 0.8310 |
+| 2 | nca_knn | 0.7291 | 0.9064 | 0.8015 |
+| 3 | xgboost | 0.7290 | 0.9265 | 0.8242 |
+| 4 | mlp | 0.7275 | 0.9256 | 0.8181 |
+| 5 | svm | 0.7249 | 0.9263 | 0.8200 |
+| 6 | gpc | 0.7248 | 0.9244 | 0.8164 |
+| 7 | logreg | 0.6779 | 0.8973 | 0.7612 |
+
+No Wilcoxon pairwise comparison reached Holm-adjusted significance in the final paired statistical comparison. Interpret descriptive rankings with caution because the primary nested-CV comparison has five paired outer folds per threshold.
+
+## Reproducibility Commands
+
+From the cleaned result directory used to generate the current outputs:
 
 ```bash
-gamma-secretase-ml-screening/
-├── data/                  # Dataset used for training/testing
-├── scripts/               # Individual ML model training scripts (ANN, RF, SVM, etc.)
-├── evaluation/            # Model evaluation and comparison
-├── results/               # Output metrics, graphs or reports
-├── README.md              # Project overview and setup instructions
-├── requirements.txt       # Python dependencies
-└── LICENSE                # Project license (MIT)
+python analyze_nested_cv_results.py --base_dir . --outdir analysis_outputs
+python final_statistical_model_comparison.py --metrics analysis_outputs/tables/all_outer_fold_metrics_long.csv --outdir analysis_outputs/final_statistics
+python fixed_hyperparameter_stability_analysis.py --base_dir . --analysis_outdir analysis_outputs --outdir analysis_outputs/fixed_hparam_stability
+python interpretability_analysis.py --base_dir . --outdir analysis_outputs --use_manifest
 ```
 
-## 💻 Infrastructure
+## Data Information
 
-All model training and evaluation were conducted on **FinisTerrae III**, the flagship supercomputer at CESGA, which provides both high-performance CPU and GPU resources interconnected by a low-latency network.  
+- Source: ChEMBL (CHEMBL2094135)
+- Descriptor calculation: approximately 200 physicochemical and topological descriptors computed with AlvaMolecule v2.0.10
+- Preprocessing: SMILES standardization, deduplication, scaling, PCA, and class-balancing procedures as implemented in the analysis scripts
 
-<img width="2171" height="1440" alt="FT3_schema" src="https://github.com/user-attachments/assets/7bea0591-faf8-4736-80e3-e8a7051867b4" />
+## Infrastructure
 
-- **Node used for benchmarking (“ilk”):**  
-  - 256 compute nodes  
-  - 2× Intel Xeon Ice Lake 8352Y (32 cores each → 64 cores/node) → 16,384 cores total  
-  - 256 GB RAM (247 GB usable)  
-  - 960 GB SSD NVMe local storage  
-  - Infiniband HDR 100 network connection  
+Model training and evaluation were conducted on FinisTerrae III at CESGA.
 
-For more details, see the CESGA user guide:  
-<https://cesga-docs.gitlab.io/ft3-user-guide/overview.html>
+Benchmarking node context from the original project documentation:
 
-## ⚙️ Requirements
+- 2 x Intel Xeon Ice Lake 8352Y processors per node
+- 64 cores per node
+- 256 GB RAM per node
+- NVMe local storage
+- Infiniband HDR 100 network connection
+
+CESGA user guide: <https://cesga-docs.gitlab.io/ft3-user-guide/overview.html>
+
+## Requirements
+
+Install the Python dependencies before rerunning the workflow:
 
 ```bash
 pip install -r requirements.txt
 ```
-## 📊 Dataset Information
 
-- **Source:** ChEMBL (CHEMBL2094135)  
-- **File:** `data/Gama_secret_pub.csv`  
-- **Entries:** 1,745 compounds  
-- **Activity labels:**  
-  - **Actives** (IC₅₀ < 10 nM): 1,367  
-  - **Inactives:** 378  
-- **Preprocessing:**  
-  - SMILES standardization & deduplication performed prior to descriptor calculation  
-- **Descriptor calculation:**  
-  - ~200 physicochemical & topological descriptors computed with **AlvaMolecule v2.0.10**
-## 💻 Code Information
+The cleaned scripts require the scientific Python stack used by the project, including pandas, numpy, scipy, scikit-learn, matplotlib, imbalanced-learn, joblib, and xgboost when XGBoost models are included.
 
-- **`data/`**:  
-  - Raw (`raw/`) and processed (`processed/`) CSVs  
-- **`scripts/`**:  
-  - `train_ann.py` – Multi-Layer Perceptron (MLP) training  
-  - `train_rf.py` – Random Forest training  
-  - `train_svm.py` – Support Vector Machine training  
-  - `train_gp.py` – Gaussian Process Classifier  
-  - `train_knn_nca.py` – KNN with Neighborhood Component Analysis  
-  - `train_lr.py` – Logistic Regression  
-- **`evaluation/`**:  
-  - `eval_mods.py` – 10-fold cross-validation and metric aggregation  
-  - `plot_stats.py` – Statistical tests (ANOVA, Tukey HSD) and plotting  
+## Citation
 
-## ⚙️ Methodology
+Dominguez Gortaire, J. A. (2025). *Evaluating Machine Learning Algorithms for Classifying Active Compounds in Alzheimer's Disease.*
 
-1. **Data curation**  
-   - Clean and standardize SMILES; remove duplicates  
-2. **Descriptor calculation**  
-   - Compute ~200 physicochemical and topological descriptors with AlvaMolecule v2.0.10  
-3. **Preprocessing**  
-   - Normalize features (StandardScaler)  
-   - Reduce dimensionality via PCA (retain 30 components)  
-4. **Model training**  
-   - Six algorithms (MLP, RF, SVM, GP, KNN+NCA, LR)  
-   - Hyperparameter optimization with Optuna TPE (100–300 trials per model)  
-   - Validation: 10-fold cross-validation, F1-macro as primary metric  
-5. **Statistical analysis**  
-   - Normality test: Shapiro–Wilk  
-   - Homoscedasticity: Bartlett’s test  
-   - ANOVA + Tukey HSD for pairwise model comparisons
-
-## 🚀 How to Run
-
-1. Place your dataset in the `data/` folder (e.g., `Gama_secretM.csv`).
-2. Run any script in the `scripts/` folder to train models individually.
-3. Use `eval_mods.py` in `evaluation/` to compare models with cross-validation metrics.
-4. Results will be saved in `.csv` files inside `results/`.
-
-## 📚 Citation
-
-> Domínguez Gortaire, J. A. (2025). *Evaluating Machine Learning Algorithms for Classifying Active Compounds in Alzheimer’s Disease.*
-
-## 📄 License
+## License
 
 MIT License
