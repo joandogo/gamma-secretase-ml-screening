@@ -16,8 +16,8 @@ The three files contain the same molecules and the same descriptor columns. They
 
 The local source files in `Mol_con_result` are:
 
-- `v2_500/Gama_secret_pub500.csv`
-- `v2_1000/Gama_secret_pub1000.csv`
-- `v2_2000/Gama_secret_pub2000.csv`
+- `data/Gama_secret_pub500.csv`
+- `data/Gama_secret_pub1000.csv`
+- `data/Gama_secret_pub2000.csv`
 
 Use the activity column matching the threshold selected for a given model run.
