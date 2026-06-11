@@ -25,6 +25,24 @@ Core methodological rules:
 5. Compare classifiers with Friedman tests over paired outer folds, followed by Wilcoxon signed-rank tests with Holm correction when appropriate.
 6. Treat fixed-hyperparameter repeated-CV results as supplementary stability evidence, not external validation.
 
+## Data
+
+The `data/` directory contains three threshold-specific datasets:
+
+- `data/Gama_secret_pub500.csv`
+- `data/Gama_secret_pub1000.csv`
+- `data/Gama_secret_pub2000.csv`
+
+The three files contain the same molecules and the same molecular descriptors. They differ only in the binary activity label used to define active compounds:
+
+| File | Activity column | Active-compound cutoff |
+|---|---|---:|
+| `Gama_secret_pub500.csv` | `Actividad_500` | IC50 <= 500 nM |
+| `Gama_secret_pub1000.csv` | `Actividad_1000` | IC50 <= 1000 nM |
+| `Gama_secret_pub2000.csv` | `Actividad_2000` | IC50 <= 2000 nM |
+
+This allows the same descriptor matrix to be evaluated under three increasingly permissive activity definitions.
+
 ## Models
 
 The analysis covers the following classifiers:
